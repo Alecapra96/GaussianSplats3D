@@ -284,6 +284,12 @@ export class Viewer {
         this.disposed = false;
         this.disposePromise = null;
         if (!this.dropInMode) this.init();
+
+        
+        // Escuchar cambios en los efectos
+        document.addEventListener('effectChanged', (event) => {
+            this.handleEffectChange(event.detail.effect, event.detail.active);
+        });
     }
 
     createSplatMesh() {
@@ -2095,5 +2101,70 @@ export class Viewer {
 
     isMobile() {
         return navigator.userAgent.includes('Mobi');
+    }
+
+    handleEffectChange(effectName, active) {
+        switch(effectName) {
+            case 'rainbow':
+                this.applyRainbowEffect(active);
+                break;
+            case 'pulse':
+                this.applyPulseEffect(active);
+                break;
+            case 'glow':
+                this.applyGlowEffect(active);
+                break;
+            case 'invert':
+                this.applyInvertEffect(active);
+                break;
+        }
+    }
+
+    applyRainbowEffect(active) {
+        if (active) {
+            // Modificar el shader para aplicar efecto arcoíris
+            this.splatMesh.material.uniforms.rainbowEffect = { value: 1 };
+            this.splatMesh.material.uniforms.time = { value: 0 };
+            
+            // Actualizar el tiempo en cada frame
+            const updateTime = () => {
+                if (this.splatMesh.material.uniforms.rainbowEffect.value === 1) {
+                    this.splatMesh.material.uniforms.time.value += 0.01;
+                    requestAnimationFrame(updateTime);
+                }
+            };
+            updateTime();
+        } else {
+            this.splatMesh.material.uniforms.rainbowEffect = { value: 0 };
+        }
+        this.splatMesh.material.uniformsNeedUpdate = true;
+    }
+
+    applyPulseEffect(active) {
+        if (active) {
+            this.splatMesh.material.uniforms.pulseEffect = { value: 1 };
+            this.splatMesh.material.uniforms.pulseTime = { value: 0 };
+            
+            const updatePulse = () => {
+                if (this.splatMesh.material.uniforms.pulseEffect.value === 1) {
+                    this.splatMesh.material.uniforms.pulseTime.value += 0.05;
+                    requestAnimationFrame(updatePulse);
+                }
+            };
+            updatePulse();
+        } else {
+            this.splatMesh.material.uniforms.pulseEffect = { value: 0 };
+        }
+        this.splatMesh.material.uniformsNeedUpdate = true;
+    }
+
+    applyGlowEffect(active) {
+        this.splatMesh.material.uniforms.glowEffect = { value: active ? 1 : 0 };
+        this.splatMesh.material.uniformsNeedUpdate = true;
+    }
+
+    applyInvertEffect(active) {
+        this.splatMesh.material.uniforms.invertEffect = { value: active ? 1 : 0 };
+        this.splatMesh.material.uniformsNeedUpdate = true;
     }
 }

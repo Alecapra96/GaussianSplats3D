@@ -61,6 +61,12 @@ export class SplatMaterial3D {
             'type': 'i',
             'value': 0
         };
+        uniforms['rainbowEffect'] = { value: 0 };
+        uniforms['time'] = { value: 0 };
+        uniforms['pulseEffect'] = { value: 0 };
+        uniforms['pulseTime'] = { value: 0 };
+        uniforms['glowEffect'] = { value: 0 };
+        uniforms['invertEffect'] = { value: 0 };
 
         const material = new THREE.ShaderMaterial({
             uniforms: uniforms,
@@ -225,19 +231,49 @@ export class SplatMaterial3D {
             #include <common>
  
             uniform vec3 debugColor;
+            uniform float rainbowEffect;
+            uniform float time;
+            uniform float pulseEffect;
+            uniform float pulseTime;
+            uniform float glowEffect;
+            uniform float invertEffect;
 
             varying vec4 vColor;
             varying vec2 vUv;
             varying vec2 vPosition;
-        `;
 
-        fragmentShaderSource += `
-            void main () {
+            // Efecto arcoíris
+            vec3 applyRainbowEffect(vec3 color, float time) {
+                float hue = time;
+                vec3 rainbow = vec3(
+                    sin(hue * 6.28318) * 0.5 + 0.5,
+                    sin((hue + 0.333) * 6.28318) * 0.5 + 0.5,
+                    sin((hue + 0.666) * 6.28318) * 0.5 + 0.5
+                );
+                return mix(color, rainbow, 0.5);
+            }
+            
+            // Efecto pulso
+            float applyPulseEffect(float time) {
+                return sin(time) * 0.5 + 0.5;
+            }
+            
+            // Efecto brillo
+            vec3 applyGlowEffect(vec3 color) {
+                return color * 1.5;
+            }
+            
+            // Efecto invertir
+            vec3 applyInvertEffect(vec3 color) {
+                return vec3(1.0) - color;
+            }
+            
+            void main() {
                 // Compute the positional squared distance from the center of the splat to the current fragment.
                 float A = dot(vPosition, vPosition);
                 // Since the positional data in vPosition has been scaled by sqrt(8), the squared result will be
                 // scaled by a factor of 8. If the squared result is larger than 8, it means it is outside the ellipse
-                // defined by the rectangle formed by vPosition. It also means it's farther
+                // defined by the rectangle formed by vPosition. It also mean it's farther
                 // away than sqrt(8) standard deviations from the mean.
                 if (A > 8.0) discard;
                 vec3 color = vColor.rgb;
@@ -247,7 +283,27 @@ export class SplatMaterial3D {
                 // and since 'mean' is zero, we have X * X, which is the same as A:
                 float opacity = exp(-0.5 * A) * vColor.a;
 
-                gl_FragColor = vec4(color.rgb, opacity);
+                vec3 finalColor = color;
+                
+                // Aplicar efectos
+                if (rainbowEffect > 0.0) {
+                    finalColor = applyRainbowEffect(finalColor, time);
+                }
+                
+                if (pulseEffect > 0.0) {
+                    float pulse = applyPulseEffect(pulseTime);
+                    finalColor = mix(finalColor, finalColor * pulse, 0.5);
+                }
+                
+                if (glowEffect > 0.0) {
+                    finalColor = applyGlowEffect(finalColor);
+                }
+                
+                if (invertEffect > 0.0) {
+                    finalColor = applyInvertEffect(finalColor);
+                }
+                
+                gl_FragColor = vec4(finalColor, opacity);
             }
         `;
 

@@ -54,6 +54,31 @@ export class InfoPanel {
                 width: 140px;
             }
 
+            .effects-panel {
+                margin-top: 15px;
+                padding-top: 15px;
+                border-top: 1px solid #555555;
+            }
+
+            .effect-button {
+                background-color: #333333;
+                border: 1px solid #555555;
+                color: #dddddd;
+                padding: 5px 10px;
+                margin: 5px;
+                border-radius: 5px;
+                cursor: pointer;
+                transition: background-color 0.3s;
+            }
+
+            .effect-button.active {
+                background-color: #4CAF50;
+            }
+
+            .effect-button:hover {
+                background-color: #444444;
+            }
+
         `;
         this.infoPanelContainer.append(style);
 
@@ -94,6 +119,44 @@ export class InfoPanel {
         }
 
         this.infoPanel.appendChild(infoTable);
+
+        // Agregar panel de efectos
+        const effectsPanel = document.createElement('div');
+        effectsPanel.className = 'effects-panel';
+        
+        const effectsTitle = document.createElement('div');
+        effectsTitle.style.fontWeight = 'bold';
+        effectsTitle.style.marginBottom = '10px';
+        effectsTitle.innerHTML = 'Efectos:';
+        effectsPanel.appendChild(effectsTitle);
+
+        const effects = [
+            { name: 'Arcoíris', id: 'rainbow' },
+            { name: 'Pulso', id: 'pulse' },
+            { name: 'Brillo', id: 'glow' },
+            { name: 'Invertir', id: 'invert' }
+        ];
+
+        effects.forEach(effect => {
+            const button = document.createElement('button');
+            button.className = 'effect-button';
+            button.innerHTML = effect.name;
+            button.dataset.effect = effect.id;
+            button.addEventListener('click', () => {
+                const isActive = button.classList.contains('active');
+                button.classList.toggle('active');
+                const event = new CustomEvent('effectChanged', {
+                    detail: {
+                        effect: effect.id,
+                        active: !isActive
+                    }
+                });
+                document.dispatchEvent(event);
+            });
+            effectsPanel.appendChild(button);
+        });
+
+        this.infoPanel.appendChild(effectsPanel);
         this.infoPanelContainer.append(this.infoPanel);
         this.infoPanelContainer.style.display = 'none';
         this.container.appendChild(this.infoPanelContainer);
