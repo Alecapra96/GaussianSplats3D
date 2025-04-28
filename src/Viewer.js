@@ -2104,22 +2104,33 @@ export class Viewer {
     }
 
     handleEffectChange(effectName, active) {
-        switch(effectName) {
-            case 'rainbow':
-                this.applyRainbowEffect(active);
-                break;
-            case 'pulse':
-                this.applyPulseEffect(active);
-                break;
-            case 'glow':
-                this.applyGlowEffect(active);
-                break;
-            case 'invert':
-                this.applyInvertEffect(active);
-                break;
+        console.log(`[Viewer] handleEffectChange called for effect: ${effectName}, active: ${active}`); // <<-- LOG AÑADIDO
+        const splatMesh = this.getSplatMesh();
+        if (splatMesh && splatMesh.material) { // Verificar si splatMesh y material existen
+            switch (effectName) {
+                case 'rainbow':
+                    this.applyRainbowEffect(active);
+                    break;
+                case 'pulse':
+                    this.applyPulseEffect(active);
+                    break;
+                case 'glow':
+                    this.applyGlowEffect(active);
+                    break;
+                case 'invert':
+                    this.applyInvertEffect(active);
+                    break;
+                case 'position':
+                    this.applyPositionEffect(active); // Llamará a la función con logs
+                    break;
+                default:
+                     console.warn(`[Viewer] Efecto desconocido: ${effectName}`); // <<-- LOG AÑADIDO (opcional)
+                     break;
+            }
+        } else {
+             console.error("[Viewer] handleEffectChange: splatMesh o su material no están definidos."); // <<-- LOG AÑADIDO
         }
     }
-
     applyRainbowEffect(active) {
         if (active) {
             // Modificar el shader para aplicar efecto arcoíris
@@ -2166,5 +2177,81 @@ export class Viewer {
     applyInvertEffect(active) {
         this.splatMesh.material.uniforms.invertEffect = { value: active ? 1 : 0 };
         this.splatMesh.material.uniformsNeedUpdate = true;
+    }
+
+    applyPositionEffect(active) {
+        console.log(`[Viewer] applyPositionEffect called with active: ${active}`); // <<-- LOG AÑADIDO
+        const splatMesh = this.getSplatMesh();
+    
+        if (splatMesh && splatMesh.material) {
+            const material = splatMesh.material;
+            console.log('[Viewer] applyPositionEffect: Material encontrado. Revisando uniforms existentes:', {
+                 positionEffect: material.uniforms.positionEffect?.value,
+                 positionOffset: material.uniforms.positionOffset?.value,
+                 positionTime: material.uniforms.positionTime?.value
+             }); // <<-- LOG AÑADIDO
+    
+            // Asegúrate que los uniforms existan antes de intentar establecerlos
+            if (!material.uniforms.positionEffect) material.uniforms.positionEffect = { value: 0 };
+            if (!material.uniforms.positionOffset) material.uniforms.positionOffset = { value: new THREE.Vector3() };
+            if (!material.uniforms.positionTime) material.uniforms.positionTime = { value: 0 };
+    
+            const targetValue = active ? 1.0 : 0.0;
+            console.log(`[Viewer] applyPositionEffect: Estableciendo positionEffect.value a ${targetValue}`); // <<-- LOG AÑADIDO
+            material.uniforms.positionEffect.value = targetValue;
+    
+            const offsetValue = new THREE.Vector3(0.1, 0.1, 0.1); // O el valor que desees
+            console.log(`[Viewer] applyPositionEffect: Estableciendo positionOffset.value a`, offsetValue); // <<-- LOG AÑADIDO
+            material.uniforms.positionOffset.value.copy(offsetValue);
+    
+            if (active) {
+                // Variable para asegurar que el bucle no se inicie múltiples veces si se llama rápido
+                if (!this.positionEffectUpdateLoopRunning) {
+                     this.positionEffectUpdateLoopRunning = true;
+                     console.log('[Viewer] applyPositionEffect: Iniciando bucle updatePosition...'); // <<-- LOG AÑADIDO
+    
+                     const updatePosition = () => {
+                         // Verificar si todavía debemos correr (podría haberse desactivado mientras esperábamos el frame)
+                         if (!this.positionEffectUpdateLoopRunning || !splatMesh.material) { // Añadida verificación de material
+                              console.log('[Viewer] updatePosition: Deteniendo bucle (efecto desactivado o material no encontrado).'); // <<-- LOG AÑADIDO
+                              this.positionEffectUpdateLoopRunning = false; // Asegurar que esté apagado
+                              return;
+                         }
+    
+                         // Usar directamente splatMesh.material aquí es más seguro si 'material' pudiera cambiar
+                         const currentMaterial = splatMesh.material;
+    
+                         if (currentMaterial.uniforms.positionEffect.value > 0) {
+                              const newTime = performance.now() * 0.001;
+                              // console.log(`[Viewer] updatePosition: Actualizando positionTime.value a ${newTime}`); // <<-- LOG MUY VERBOSO (descomentar si es necesario)
+                              currentMaterial.uniforms.positionTime.value = newTime;
+                              currentMaterial.uniformsNeedUpdate = true;
+                              requestAnimationFrame(updatePosition); // Continuar el bucle
+                         } else {
+                              console.log('[Viewer] updatePosition: Deteniendo bucle (positionEffect.value es 0).'); // <<-- LOG AÑADIDO
+                              this.positionEffectUpdateLoopRunning = false; // Detener el bucle si el efecto se desactivó
+                              // Opcional: resetear el tiempo aquí si se desea
+                              // currentMaterial.uniforms.positionTime.value = 0;
+                              // currentMaterial.uniformsNeedUpdate = true;
+                         }
+                     };
+                     requestAnimationFrame(updatePosition); // Iniciar el bucle por primera vez
+                 } else {
+                      console.log('[Viewer] applyPositionEffect: Bucle updatePosition ya está corriendo.'); // <<-- LOG AÑADIDO
+                 }
+            } else {
+                // Si se desactiva, marca explícitamente que el bucle debe detenerse
+                console.log('[Viewer] applyPositionEffect: Marcando para detener el bucle updatePosition.'); // <<-- LOG AÑADIDO
+                this.positionEffectUpdateLoopRunning = false;
+                // Resetea el tiempo si quieres que empiece de 0 la próxima vez
+                material.uniforms.positionTime.value = 0;
+            }
+    
+            material.uniformsNeedUpdate = true;
+            console.log('[Viewer] applyPositionEffect: Finalizado. uniformsNeedUpdate establecido a true.'); // <<-- LOG AÑADIDO
+    
+        } else {
+            console.error("[Viewer] applyPositionEffect: splatMesh o splatMesh.material no encontrados."); // <<-- LOG AÑADIDO
+        }
     }
 }

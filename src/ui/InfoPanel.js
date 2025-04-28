@@ -24,61 +24,73 @@ export class InfoPanel {
         this.infoPanelContainer = document.createElement('div');
         const style = document.createElement('style');
         style.innerHTML = `
-
             .infoPanel {
                 width: 430px;
-                padding: 10px;
-                background-color: rgba(50, 50, 50, 0.85);
-                border: #555555 2px solid;
-                color: #dddddd;
-                border-radius: 10px;
+                padding: 15px;
+                background-color: rgba(30, 30, 30, 0.9);
+                border: 1px solid rgba(255, 255, 255, 0.1);
+                color: #ffffff;
+                border-radius: 12px;
                 z-index: 9999;
-                font-family: arial;
-                font-size: 11pt;
+                font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+                font-size: 12pt;
                 text-align: left;
                 margin: 0;
                 top: 10px;
-                left:10px;
+                left: 10px;
                 position: absolute;
                 pointer-events: auto;
+                backdrop-filter: blur(10px);
+                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
             }
 
             .info-panel-cell {
-                margin-bottom: 5px;
-                padding-bottom: 2px;
+                margin-bottom: 8px;
+                padding-bottom: 4px;
+                transition: all 0.2s ease;
+            }
+
+            .info-panel-cell:hover {
+                background-color: rgba(255, 255, 255, 0.05);
+                border-radius: 4px;
+                padding-left: 5px;
             }
 
             .label-cell {
-                font-weight: bold;
+                font-weight: 600;
                 font-size: 12pt;
                 width: 140px;
+                color: #a0a0a0;
             }
 
             .effects-panel {
-                margin-top: 15px;
-                padding-top: 15px;
-                border-top: 1px solid #555555;
+                margin-top: 20px;
+                padding-top: 20px;
+                border-top: 1px solid rgba(255, 255, 255, 0.1);
             }
 
             .effect-button {
-                background-color: #333333;
-                border: 1px solid #555555;
-                color: #dddddd;
-                padding: 5px 10px;
+                background-color: rgba(255, 255, 255, 0.1);
+                border: 1px solid rgba(255, 255, 255, 0.2);
+                color: #ffffff;
+                padding: 8px 16px;
                 margin: 5px;
-                border-radius: 5px;
+                border-radius: 8px;
                 cursor: pointer;
-                transition: background-color 0.3s;
+                transition: all 0.2s ease;
+                font-weight: 500;
             }
 
             .effect-button.active {
                 background-color: #4CAF50;
+                border-color: #4CAF50;
+                box-shadow: 0 0 10px rgba(76, 175, 80, 0.3);
             }
 
             .effect-button:hover {
-                background-color: #444444;
+                background-color: rgba(255, 255, 255, 0.15);
+                transform: translateY(-1px);
             }
-
         `;
         this.infoPanelContainer.append(style);
 
@@ -134,7 +146,8 @@ export class InfoPanel {
             { name: 'Arcoíris', id: 'rainbow' },
             { name: 'Pulso', id: 'pulse' },
             { name: 'Brillo', id: 'glow' },
-            { name: 'Invertir', id: 'invert' }
+            { name: 'Invertir', id: 'invert' },
+            { name: 'Posición', id: 'position' }
         ];
 
         effects.forEach(effect => {

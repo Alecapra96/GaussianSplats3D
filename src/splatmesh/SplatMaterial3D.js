@@ -67,6 +67,10 @@ export class SplatMaterial3D {
         uniforms['pulseTime'] = { value: 0 };
         uniforms['glowEffect'] = { value: 0 };
         uniforms['invertEffect'] = { value: 0 };
+        uniforms['positionEffect'] = { value: 0 };
+        uniforms['positionOffset'] = { value: new THREE.Vector3(0, 0, 0) };
+        uniforms['positionTime'] = { value: 0 };
+        uniforms['debugColor'] = { value: new THREE.Color(0xff0000) }; // Or any default color
 
         const material = new THREE.ShaderMaterial({
             uniforms: uniforms,
@@ -226,7 +230,7 @@ export class SplatMaterial3D {
     }
 
     static buildFragmentShader() {
-        let fragmentShaderSource = `
+        return `
             precision highp float;
             #include <common>
  
@@ -237,12 +241,14 @@ export class SplatMaterial3D {
             uniform float pulseTime;
             uniform float glowEffect;
             uniform float invertEffect;
+            uniform float positionEffect;
+            uniform vec3 positionOffset;
+            uniform float positionTime;
 
             varying vec4 vColor;
             varying vec2 vUv;
             varying vec2 vPosition;
 
-            // Efecto arcoíris
             vec3 applyRainbowEffect(vec3 color, float time) {
                 float hue = time;
                 vec3 rainbow = vec3(
@@ -253,39 +259,48 @@ export class SplatMaterial3D {
                 return mix(color, rainbow, 0.5);
             }
             
-            // Efecto pulso
             float applyPulseEffect(float time) {
                 return sin(time) * 0.5 + 0.5;
             }
             
-            // Efecto brillo
             vec3 applyGlowEffect(vec3 color) {
                 return color * 1.5;
             }
             
-            // Efecto invertir
             vec3 applyInvertEffect(vec3 color) {
                 return vec3(1.0) - color;
             }
             
+     
+vec2 applyPositionEffect(vec2 position, float time) {
+    // --- Opción 1: Vibración rápida con Sinusoidal ---
+    // float frequency = 40.0; // Aumenta este valor para una vibración más rápida (prueba 20, 40, 60...)
+    // float amplitude = 1.0;  // Usa el rango completo de sin (-1 a 1) para ir y venir
+    // float wave = sin(time * frequency) * amplitude;
+
+    // --- Opción 2: Movimiento Alternante (más abrupto) ---
+    // Descomenta estas dos líneas y comenta las 3 anteriores si quieres probar esta opción
+    float frequency = 15.0; // Número de veces que cambia de dirección por segundo
+    float wave = (fract(time * frequency) < 0.5) ? 1.0 : -1.0; // Alterna entre +1 y -1
+
+    // Aplicar el desplazamiento. Mantenemos positionOffset pequeño inicialmente.
+    return position + vec2(positionOffset.x, positionOffset.y) * wave;
+}
+
+
             void main() {
-                // Compute the positional squared distance from the center of the splat to the current fragment.
-                float A = dot(vPosition, vPosition);
-                // Since the positional data in vPosition has been scaled by sqrt(8), the squared result will be
-                // scaled by a factor of 8. If the squared result is larger than 8, it means it is outside the ellipse
-                // defined by the rectangle formed by vPosition. It also mean it's farther
-                // away than sqrt(8) standard deviations from the mean.
+                vec2 finalPosition = vPosition;
+                if (positionEffect > 0.0) {
+                    finalPosition = applyPositionEffect(vPosition, positionTime);
+                }
+                
+                float A = dot(finalPosition, finalPosition);
                 if (A > 8.0) discard;
+                
                 vec3 color = vColor.rgb;
-
-                // Since the rendered splat is scaled by sqrt(8), the inverse covariance matrix that is part of
-                // the gaussian formula becomes the identity matrix. We're then left with (X - mean) * (X - mean),
-                // and since 'mean' is zero, we have X * X, which is the same as A:
                 float opacity = exp(-0.5 * A) * vColor.a;
-
                 vec3 finalColor = color;
                 
-                // Aplicar efectos
                 if (rainbowEffect > 0.0) {
                     finalColor = applyRainbowEffect(finalColor, time);
                 }
@@ -306,8 +321,6 @@ export class SplatMaterial3D {
                 gl_FragColor = vec4(finalColor, opacity);
             }
         `;
-
-        return fragmentShaderSource;
     }
 
 }

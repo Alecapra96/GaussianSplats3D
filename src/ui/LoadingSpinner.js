@@ -46,7 +46,6 @@ export class LoadingSpinner {
 
         const style = document.createElement('style');
         style.innerHTML = `
-
             .spinnerOuterContainer${this.elementID} {
                 width: 100%;
                 height: 100%;
@@ -59,18 +58,18 @@ export class LoadingSpinner {
 
             .messageContainer${this.elementID} {
                 height: 20px;
-                font-family: arial;
-                font-size: 12pt;
+                font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+                font-size: 13pt;
                 color: #ffffff;
                 text-align: center;
                 vertical-align: middle;
+                font-weight: 500;
             }
 
             .spinner${this.elementID} {
                 padding: 15px;
-                background: #07e8d6;
-                z-index:99999;
-            
+                background: linear-gradient(45deg, #4CAF50, #2196F3);
+                z-index: 99999;
                 aspect-ratio: 1;
                 border-radius: 50%;
                 --_m: 
@@ -82,15 +81,16 @@ export class LoadingSpinner {
                     mask-composite: subtract;
                 box-sizing: border-box;
                 animation: load 1s linear infinite;
+                box-shadow: 0 0 15px rgba(33, 150, 243, 0.3);
             }
 
             .spinnerContainerPrimary${this.elementID} {
-                z-index:99999;
-                background-color: rgba(128, 128, 128, 0.75);
-                border: #666666 1px solid;
-                border-radius: 5px;
-                padding-top: 20px;
-                padding-bottom: 10px;
+                z-index: 99999;
+                background-color: rgba(30, 30, 30, 0.9);
+                border: 1px solid rgba(255, 255, 255, 0.1);
+                border-radius: 12px;
+                padding-top: 25px;
+                padding-bottom: 20px;
                 margin: 0;
                 position: absolute;
                 top: 50%;
@@ -98,6 +98,8 @@ export class LoadingSpinner {
                 transform: translate(-80px, -80px);
                 width: 180px;
                 pointer-events: auto;
+                backdrop-filter: blur(10px);
+                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
             }
 
             .spinnerPrimary${this.elementID} {
@@ -106,16 +108,15 @@ export class LoadingSpinner {
             }
 
             .messageContainerPrimary${this.elementID} {
-                padding-top: 15px;
+                padding-top: 20px;
             }
 
             .spinnerContainerMin${this.elementID} {
-                z-index:99999;
-                background-color: rgba(128, 128, 128, 0.75);
-                border: #666666 1px solid;
-                border-radius: 5px;
-                padding-top: 20px;
-                padding-bottom: 15px;
+                z-index: 99999;
+                background-color: rgba(30, 30, 30, 0.9);
+                border: 1px solid rgba(255, 255, 255, 0.1);
+                border-radius: 12px;
+                padding: 20px;
                 margin: 0;
                 position: absolute;
                 bottom: 50px;
@@ -125,6 +126,8 @@ export class LoadingSpinner {
                 flex-direction: left;
                 pointer-events: auto;
                 min-width: 250px;
+                backdrop-filter: blur(10px);
+                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
             }
 
             .messageContainerMin${this.elementID} {
@@ -145,7 +148,6 @@ export class LoadingSpinner {
             @keyframes load {
                 to{transform: rotate(1turn)}
             }
-
         `;
         this.spinnerContainerOuter.appendChild(style);
         this.container.appendChild(this.spinnerContainerOuter);
